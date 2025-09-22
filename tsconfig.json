@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "outDir": "./build",
+    "rootDir": "./src",
+    "paths": {
+      "@config/*": ["./src/config/*"],
+      "@envConfig": ["./src/config/env/env"],
+      "@loaders/*": ["./src/config/loaders/*"],
+      "@domainConstants/*": ["./src/domain/constants/*"],
+      "@domainErrors/*": ["./src/domain/errors/*"],
+      "@domainModels/*": ["./src/domain/models/*"],
+      "@usecases/*": ["./src/domain/usecases/*"],
+      "@ports/*": ["./src/domain/ports/*"],
+      "@applications/*": ["./src/applications/*"],
+      "@domainUtils/*": ["./src/domain/utils/*"],
+      "@infra/*": ["./src/infrastructure/*"],
+      "@resources/*": ["./src/resources/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

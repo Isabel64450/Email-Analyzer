@@ -49,3 +49,15 @@ interface EmailAuthAnalysis {
   dmarc?: DMARCResult;
   arc?: ARCSet[];
 }
+
+export type EmailRiskDecision = 'OK' | 'Suspicious' | 'Very Suspicious' | 'Dangerous';
+export interface AnalyzerResult {
+  score: number;
+  decision: EmailRiskDecision;
+  reasons: string[];
+}
+
+export interface InternetHeader {
+  name: string;
+  value: string;
+}

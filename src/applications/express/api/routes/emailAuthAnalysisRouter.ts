@@ -13,7 +13,7 @@ export default (app: Router) => {
 
   
   route.get(
-    "/test-usecase",
+    "/finalScore-usecase",
     asyncHandler(async (req: Request, res: Response) => {
       await emailHeaderAnalizeUsecase.execute(null);
       return res.send("Test usecase working !").status(200);

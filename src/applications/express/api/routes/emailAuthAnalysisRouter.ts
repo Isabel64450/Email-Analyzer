@@ -1,28 +1,39 @@
 import { Router, Request, Response } from "express";
 import { asyncHandler } from "@applications/express/utils/asyncHandler";
-import { AnalyzeEmailHeaderUsecase } from "@usecases/HeaderAnalizerScoreUsecase";
+import { AnalyzeEmailDomainAuthUseCase } from "@usecases/AnalyzeEmailDomainUsecase";
+import {AnalyzeEmailUseCase} from "../../../../domain/usecases/AnalyzeEmailUsecase"
+import { GraphApiMessageProvider } from "@infra/microsoftGraph/adapters/GraphEmailAdapter";
 
 const route = Router();
 
-
-
-const emailHeaderAnalizeUsecase: AnalyzeEmailHeaderUsecase = new AnalyzeEmailHeaderUsecase();
-
+const messageProvider = new GraphApiMessageProvider();
+const domainAuthUseCase = new AnalyzeEmailDomainAuthUseCase();
+const analyzeEmailUseCase = new AnalyzeEmailUseCase(messageProvider, domainAuthUseCase);
 export default (app: Router) => {
   app.use("", route);
 
-  
-  route.post(
-    "/analyze",
-    asyncHandler(async (req: Request, res: Response) => {
-     const { headers } = req.body;
-
-      if (!headers || !Array.isArray(headers)) {
-        return res.status(400).json({ error: "Missing or invalid 'headers' in request body" });
-      }
-
-      const result = emailHeaderAnalizeUsecase.analyze(headers); 
-      return res.status(200).json(result);
+  route.get(
+    "/test",
+    asyncHandler((req: Request, res: Response) => {
+      return res.send("Test route working !").status(200);
     })
   );
+
+  route.get('/messages/:userId/:messageId', async (req: Request, res: Response) => {
+  const { userId, messageId } = req.params;
+
+  if (!userId || !messageId) {
+    return res.status(400).json({ error: 'Paramètres requis manquants.' });
+  }
+
+  try {
+    const message = await analyzeEmailUseCase.execute(userId, messageId);
+    res.json(message);
+  } catch (error: any) {
+    console.error('❌ Erreur lors de la récupération du message:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+  
 };

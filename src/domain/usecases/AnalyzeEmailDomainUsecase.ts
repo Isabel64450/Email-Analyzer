@@ -1,0 +1,53 @@
+import { EmailHeader } from '../models/emailAnalyzer/EmailHeader';
+
+export class AnalyzeEmailDomainAuthUseCase {
+  async execute(headers: EmailHeader[]): Promise<{
+    score: number;
+    message: string;
+  }> {
+    let score = 0;
+    const reasons: string[] = [];
+
+    const headerMap: Record<string, string> = {};
+    headers.forEach(h => {
+      headerMap[h.name.toLowerCase()] = h.value;
+    });
+
+    const authResults = headerMap['authentication-results'] || '';
+    const receivedSpf = headerMap['received-spf'] || '';
+    const dkimSignature = headerMap['dkim-signature'] || '';
+    const arc = headerMap['arc-authentication-results'] || '';
+
+    // SPF
+    if (/softfail|fail/i.test(receivedSpf)) {
+      score += 25;
+      reasons.push('SPF échoué (softfail/fail)');
+    }
+
+    // DKIM
+    const dkimFail = /dkim=fail|none/i.test(authResults);
+    const dkimMissing = !dkimSignature;
+    if (dkimFail || dkimMissing) {
+      score += 20;
+      reasons.push('DKIM absent ou invalide');
+    }
+
+    // DMARC
+    if (/dmarc=fail/i.test(authResults)) {
+      score += 35;
+      reasons.push('DMARC échoué');
+    }
+
+    // ARC
+    if (/arc=fail/i.test(authResults) || /fail/i.test(arc)) {
+      score += 10;
+      reasons.push('ARC invalide (forward douteux)');
+    }
+
+    const message = reasons.length
+      ? `L’authentification de l’expéditeur a échoué (${reasons.join(', ')}).`
+      : 'Authentification du domaine réussie.';
+
+    return { score, message };
+  }
+}

@@ -1,10 +1,12 @@
-export abstract class ScoringStep {
- 
- protected score = 0
- 
- protected reasons: string[] =[]
+export abstract class EmailAnalyzer {
+  abstract analyze(email: {
+    subject: string;
+    bodyContent: string;
+    contentType: string;
+  }): Promise<{
+    score: number;
+    message: string;
+  }>;
 
-
-
-  abstract analyze(emailContent: string): { score: number; reasons: string[] };
+  
 }

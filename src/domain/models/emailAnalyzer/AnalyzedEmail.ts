@@ -3,9 +3,9 @@ import { EmailBody } from './EmailBody';
 import { EmailMetadata } from './EmailMetadata';
 
 
-export class AnalyzedEmail {
+export class EmailMessage {
   constructor(
-    public readonly header: EmailHeader,
+    public readonly headers: EmailHeader[],
     public readonly body: EmailBody,
     public readonly metadata: EmailMetadata
   ) {}

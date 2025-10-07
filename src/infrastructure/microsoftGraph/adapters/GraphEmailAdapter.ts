@@ -1,6 +1,10 @@
 import axios from 'axios';
 import { MessageProvider } from '../../../domain/ports/EmailAuthAnalyzerPort';
 import { getAccessToken } from '../authentication/authGraphToken'; 
+import { EmailMessage } from '../../../domain/models/emailAnalyzer/AnalyzedEmail';
+import { EmailHeader } from '../../../domain/models/emailAnalyzer/EmailHeader';
+import { EmailBody } from '../../../domain/models/emailAnalyzer/EmailBody';
+import { EmailMetadata } from '../../../domain/models/emailAnalyzer/EmailMetadata';
 
 export class GraphApiMessageProvider implements MessageProvider {
   async getMessageById(userId: string, messageId: string) {
@@ -14,9 +18,30 @@ export class GraphApiMessageProvider implements MessageProvider {
         'Content-Type': 'application/json',
       },
     });
+        const message = response.data;
+  
+    const headers: EmailHeader[] = (message.internetMessageHeaders || []).map(
+      (header: any) => new EmailHeader(header.name, header.value)
+    );
 
-    const message = response.data;
+  
+    const body = new EmailBody(
+      message.body?.contentType || 'text/plain',
+      message.body?.content || ''
+    );
 
-    return message
+   
+    const metadata = new EmailMetadata(
+      message.id,
+      message.subject || '',
+      message.from?.emailAddress?.address || '',
+      new Date(message.sentDateTime),
+      new Date(message.receivedDateTime),
+      message.conversationId,
+      message.webLink
+    );
+
+   
+    return new EmailMessage(headers, body, metadata);
   }
 }

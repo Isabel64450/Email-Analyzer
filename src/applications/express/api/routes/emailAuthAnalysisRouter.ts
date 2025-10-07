@@ -3,12 +3,17 @@ import { asyncHandler } from "@applications/express/utils/asyncHandler";
 import { AnalyzeEmailDomainAuthUseCase } from "@usecases/AnalyzeEmailDomainUsecase";
 import {AnalyzeEmailUseCase} from "../../../../domain/usecases/AnalyzeEmailUsecase"
 import { GraphApiMessageProvider } from "@infra/microsoftGraph/adapters/GraphEmailAdapter";
+import { AnalyzeDisplayNameImpersonationUseCase } from "@usecases/AnalyzeDisplayNameUsecase";
+import { WhoisJsonAdapter} from "@infra/microsoftGraph/adapters/WhoisJsonAdapter";
+import { AnalyzeDomainReputationUseCase } from "@usecases/AnalyzeDomainReputationUsecase";
 
 const route = Router();
-
+const whoisAdapter = new WhoisJsonAdapter(); 
 const messageProvider = new GraphApiMessageProvider();
 const domainAuthUseCase = new AnalyzeEmailDomainAuthUseCase();
-const analyzeEmailUseCase = new AnalyzeEmailUseCase(messageProvider, domainAuthUseCase);
+const displayNameUsecase = new AnalyzeDisplayNameImpersonationUseCase()
+const domainReputationUseCase = new AnalyzeDomainReputationUseCase(whoisAdapter);
+const analyzeEmailUseCase = new AnalyzeEmailUseCase(messageProvider, domainAuthUseCase, displayNameUsecase,domainReputationUseCase);
 export default (app: Router) => {
   app.use("", route);
 

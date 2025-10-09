@@ -1,10 +1,12 @@
-import { EmailHeader } from '../models/emailAnalyzer/EmailHeader';
+
 import { EmailAnalyzer } from './AbstractAnalyzeEmailUsecase';
+import { EmailMessage } from '@domainModels/emailAnalyzer/AnalyzedEmail';
 
 export class AnalyzeEmailDomainAuthUseCase extends EmailAnalyzer {
-  async analyze(email: { subject?: string; bodyContent?: string; contentType?: string; headers: EmailHeader[] }) : Promise<{ score: number; message: string }>   {
-
-     const headers = email.headers;
+  async analyze(email: EmailMessage): Promise<{ score: number; message: string }> {
+ 
+  const headers = email.headers;
+     
     let score = 0;
     const reasons: string[] = [];
 

@@ -6,6 +6,8 @@ import { GraphApiMessageProvider } from "@infra/microsoftGraph/adapters/GraphEma
 import { AnalyzeDisplayNameImpersonationUseCase } from "@usecases/AnalyzeDisplayNameUsecase";
 import { WhoisJsonAdapter} from "@infra/microsoftGraph/adapters/WhoisJsonAdapter";
 import { AnalyzeDomainReputationUseCase } from "@usecases/AnalyzeDomainReputationUsecase";
+import { AnalyzeReplyToMismatchUseCase } from "@usecases/AnalyzeReplyToMismatchUsecase";
+
 
 const route = Router();
 const whoisAdapter = new WhoisJsonAdapter(); 
@@ -13,7 +15,8 @@ const messageProvider = new GraphApiMessageProvider();
 const domainAuthUseCase = new AnalyzeEmailDomainAuthUseCase();
 const displayNameUsecase = new AnalyzeDisplayNameImpersonationUseCase()
 const domainReputationUseCase = new AnalyzeDomainReputationUseCase(whoisAdapter);
-const analyzeEmailUseCase = new AnalyzeEmailUseCase(messageProvider, domainAuthUseCase, displayNameUsecase,domainReputationUseCase);
+const replyToMismatch = new AnalyzeReplyToMismatchUseCase()
+const analyzeEmailUseCase = new AnalyzeEmailUseCase(messageProvider, domainAuthUseCase, displayNameUsecase,domainReputationUseCase,replyToMismatch);
 export default (app: Router) => {
   app.use("", route);
 

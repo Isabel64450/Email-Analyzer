@@ -1,13 +1,14 @@
 import { MessageProvider } from '../ports/EmailAuthAnalyzerPort';
 import { EmailAnalyzer } from './AbstractAnalyzeEmailUsecase';
-import { AnalyzeEmailDomainAuthUseCase } from './AnalyzeEmailDomainUsecase';
-import { AnalyzeDisplayNameImpersonationUseCase } from './AnalyzeDisplayNameUsecase';
+
+
 export class AnalyzeEmailUseCase {
   constructor(
     private readonly messageProvider: MessageProvider,
     private readonly domainAuthUseCase: EmailAnalyzer,
     private readonly displayNameImpersonationUseCase: EmailAnalyzer,
-    private readonly domainReputationUseCase: EmailAnalyzer
+    private readonly domainReputationUseCase: EmailAnalyzer,
+    private readonly replyToMismatchUseCase: EmailAnalyzer
   ) {}
 
   async execute(userId: string, messageId: string) {
@@ -18,35 +19,36 @@ export class AnalyzeEmailUseCase {
   throw new Error('En-têtes d’e-mail manquants.');
 }
 
-     const domainAuthAnalysis = await this.domainAuthUseCase.analyze({
-      subject: message.metadata.subject,
-      bodyContent: message.body.content,
-      contentType: message.body.contentType,
-      headers: message.headers,});
-   
-     const displayNameAnalysis = await this.displayNameImpersonationUseCase.analyze({
-      subject: message.metadata.subject,
-      bodyContent: message.body.content,
-      contentType: message.body.contentType,
-      headers: message.headers,
-    });
-     const domainReputationAnalysis = await this.domainReputationUseCase.analyze({
-      subject: message.metadata.subject,
-      bodyContent: message.body.content,
-      contentType: message.body.contentType,
-      headers: message.headers, 
-    });
+     
+
+    const runAnalysis = (analyzer: EmailAnalyzer) => analyzer.analyze(message);
+
+    const [
+      domainAuthAnalysis,
+      displayNameAnalysis,
+      domainReputationAnalysis,
+      replyToMismatchAnalysis,
+    ] = await Promise.all([
+      runAnalysis(this.domainAuthUseCase),
+      runAnalysis(this.displayNameImpersonationUseCase),
+      runAnalysis(this.domainReputationUseCase),
+      runAnalysis(this.replyToMismatchUseCase),
+      
+    ]);
+
 
     return {
   analyses: {
     domainAuthentication: domainAuthAnalysis,
     displayNameImpersonation: displayNameAnalysis,
     domainReputation: domainReputationAnalysis, 
+    replyToMismatch: replyToMismatchAnalysis,
   },
   totalScore:
     domainAuthAnalysis.score +
     displayNameAnalysis.score +
-    domainReputationAnalysis.score,
+    domainReputationAnalysis.score +
+    replyToMismatchAnalysis.score
 };
   }
 }

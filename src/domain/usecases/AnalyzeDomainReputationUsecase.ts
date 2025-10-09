@@ -1,6 +1,6 @@
 import { EmailAnalyzer } from './AbstractAnalyzeEmailUsecase';
 import { WhoisDomainInfoProvider } from '../ports/WhoisDomainInfoProvider';
-import { EmailHeader } from '../models/emailAnalyzer/EmailHeader';
+import { EmailMessage } from '@domainModels/emailAnalyzer/AnalyzedEmail';
 
 
 export class AnalyzeDomainReputationUseCase extends EmailAnalyzer {
@@ -8,12 +8,10 @@ export class AnalyzeDomainReputationUseCase extends EmailAnalyzer {
     super();
   }
 
-  async analyze(email: {
-    subject?: string;
-    bodyContent?: string;
-    contentType?: string;
-    headers?: EmailHeader[];
-  }): Promise<{ score: number; message: string }> {
+  async analyze(email: EmailMessage): Promise<{ score: number; message: string }> {
+  const subject = email.metadata.subject;
+  const body = email.body.content;
+  const headers = email.headers;
     const from = email.headers?.find(h => h.name.toLowerCase() === 'from')?.value;
     if (!from) return { score: 0, message: 'Pas d’expéditeur' };
 

@@ -1,11 +1,7 @@
-import { EmailHeader } from '../models/emailAnalyzer/EmailHeader'; 
+import { EmailMessage } from '@domainModels/emailAnalyzer/AnalyzedEmail';
+
 export abstract class EmailAnalyzer {
-  abstract analyze(email: {
-    subject?: string;
-    bodyContent?: string;
-    contentType?: string;
-    headers?: EmailHeader[];
-  }): Promise<{
+  abstract analyze(email: EmailMessage): Promise<{
     score: number;
     message: string;
   }>;

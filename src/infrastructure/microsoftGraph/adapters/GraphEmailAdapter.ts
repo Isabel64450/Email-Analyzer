@@ -7,7 +7,7 @@ import { EmailBody } from '../../../domain/models/emailAnalyzer/EmailBody';
 import { EmailMetadata } from '../../../domain/models/emailAnalyzer/EmailMetadata';
 
 export class GraphApiMessageProvider implements MessageProvider {
-  async getMessageById(userId: string, messageId: string) {
+  async getMessageById(userId: string, messageId: string) : Promise<EmailMessage>  {
     const accessToken = await getAccessToken();
 
     const url = `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(userId)}/messages/${encodeURIComponent(messageId)}?$select=internetMessageHeaders,from,toRecipients,receivedDateTime`;

@@ -1,6 +1,5 @@
 import { EmailAnalyzer } from './AbstractAnalyzeEmailUsecase';
-import { EmailHeader } from '../models/emailAnalyzer/EmailHeader';
-
+import { EmailMessage } from '@domainModels/emailAnalyzer/AnalyzedEmail';
 export class AnalyzeDisplayNameImpersonationUseCase extends EmailAnalyzer {
   private readonly trustedNames = [
     'CEO',
@@ -11,7 +10,7 @@ export class AnalyzeDisplayNameImpersonationUseCase extends EmailAnalyzer {
     'Support',
     'IT Service',
     // ajoute d’autres noms / titres internes ici
-  ];
+  ]; 
 
   private readonly trustedDomains = [
     'monentreprise.com',
@@ -19,13 +18,9 @@ export class AnalyzeDisplayNameImpersonationUseCase extends EmailAnalyzer {
     // ajoute les domaines internes légitimes
   ];
 
-  async analyze(email: {
-    subject?: string;
-    bodyContent?: string;
-    contentType?: string;
-    headers?: EmailHeader[];
-  }): Promise<{ score: number; message: string }> {
-    const headers = email.headers || [];
+ async analyze(email: EmailMessage): Promise<{ score: number; message: string }> {
+  
+  const headers = email.headers;
 
     // Trouve l'entête 'From' qui contient normalement le displayName et l'adresse mail
     const fromHeader = headers.find(h => h.name.toLowerCase() === 'from');
@@ -52,15 +47,24 @@ export class AnalyzeDisplayNameImpersonationUseCase extends EmailAnalyzer {
       displayName.includes(name.toLowerCase())
     );
 
-    // Vérifier si domaine n’est pas interne
-    const isExternalDomain = !this.trustedDomains.includes(domain);
+    const isInternalDomain = this.trustedDomains.includes(domain);
+  const isExternalDomain = !isInternalDomain;
 
-    if (impersonating && isExternalDomain) {
-      return {
-        score: 25,
-        message: `Le nom d’affichage imite un contact interne (ex: ${displayName}) mais le domaine diffère (${domain}).`
-      };
-    }
+  // Cas 1 : Usurpation d’un nom sensible depuis un domaine externe → +25
+  if (impersonating && isExternalDomain) {
+    return {
+      score: 25,
+      message: `Le nom d’affichage imite un contact interne (ex: ${displayName}) mais le domaine diffère (${domain}).`
+    };
+  }
+
+  // Cas 2 : Domaine interne utilisé = réduction du score → -15
+  if (isInternalDomain) {
+    return {
+      score: -15,
+      message: `Le domaine (${domain}) est reconnu comme interne de confiance. Risque réduit.`
+    };
+  }
 
     return { score: 0, message: 'Aucune usurpation détectée sur le nom affiché.' };
   }

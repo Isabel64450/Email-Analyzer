@@ -8,7 +8,10 @@ export class AnalyzeEmailUseCase {
     private readonly domainAuthUseCase: EmailAnalyzer,
     private readonly displayNameImpersonationUseCase: EmailAnalyzer,
     private readonly domainReputationUseCase: EmailAnalyzer,
-    private readonly replyToMismatchUseCase: EmailAnalyzer
+    private readonly replyToMismatchUseCase: EmailAnalyzer,
+    private readonly linkMismatchUsecase: EmailAnalyzer,
+    private readonly urlRiskUsecase: EmailAnalyzer,
+    private readonly attachementRiskUsecase: EmailAnalyzer
   ) {}
 
   async execute(userId: string, messageId: string) {
@@ -28,11 +31,18 @@ export class AnalyzeEmailUseCase {
       displayNameAnalysis,
       domainReputationAnalysis,
       replyToMismatchAnalysis,
+      linkMismatchAnalysis,
+      urlRiskAnalysis,
+      attachementRiskAnalysis,
+      
     ] = await Promise.all([
       runAnalysis(this.domainAuthUseCase),
       runAnalysis(this.displayNameImpersonationUseCase),
       runAnalysis(this.domainReputationUseCase),
       runAnalysis(this.replyToMismatchUseCase),
+      runAnalysis(this.linkMismatchUsecase),
+      runAnalysis(this.urlRiskUsecase),
+      runAnalysis(this.attachementRiskUsecase)
       
     ]);
 
@@ -43,12 +53,18 @@ export class AnalyzeEmailUseCase {
     displayNameImpersonation: displayNameAnalysis,
     domainReputation: domainReputationAnalysis, 
     replyToMismatch: replyToMismatchAnalysis,
+    linkMismatch: linkMismatchAnalysis,
+    urlRisk: urlRiskAnalysis,
+    attachementRisk: attachementRiskAnalysis
   },
   totalScore:
     domainAuthAnalysis.score +
     displayNameAnalysis.score +
     domainReputationAnalysis.score +
-    replyToMismatchAnalysis.score
+    replyToMismatchAnalysis.score +
+    linkMismatchAnalysis.score +
+    urlRiskAnalysis.score + 
+    attachementRiskAnalysis.score
 };
   }
 }

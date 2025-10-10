@@ -7,7 +7,9 @@ import { AnalyzeDisplayNameImpersonationUseCase } from "@usecases/AnalyzeDisplay
 import { WhoisJsonAdapter} from "@infra/microsoftGraph/adapters/WhoisJsonAdapter";
 import { AnalyzeDomainReputationUseCase } from "@usecases/AnalyzeDomainReputationUsecase";
 import { AnalyzeReplyToMismatchUseCase } from "@usecases/AnalyzeReplyToMismatchUsecase";
-
+import { AnalyzeLinkMismatchUseCase } from "@usecases/AnalyzeLinkMismatchUsecase";
+import { AnalyzeUrlRiskUseCase } from "@usecases/AnalyzerUrlRiskUsecase";
+import { AnalyzeAttachmentRiskUseCase } from "@usecases/AnalizeAttachementRiskUsecase";
 
 const route = Router();
 const whoisAdapter = new WhoisJsonAdapter(); 
@@ -15,8 +17,11 @@ const messageProvider = new GraphApiMessageProvider();
 const domainAuthUseCase = new AnalyzeEmailDomainAuthUseCase();
 const displayNameUsecase = new AnalyzeDisplayNameImpersonationUseCase()
 const domainReputationUseCase = new AnalyzeDomainReputationUseCase(whoisAdapter);
-const replyToMismatch = new AnalyzeReplyToMismatchUseCase()
-const analyzeEmailUseCase = new AnalyzeEmailUseCase(messageProvider, domainAuthUseCase, displayNameUsecase,domainReputationUseCase,replyToMismatch);
+const replyToMismatch = new AnalyzeReplyToMismatchUseCase();
+const linkMismatch = new AnalyzeLinkMismatchUseCase()
+const urlRisk = new AnalyzeUrlRiskUseCase()
+const attachementRisk = new AnalyzeAttachmentRiskUseCase()
+const analyzeEmailUseCase = new AnalyzeEmailUseCase(messageProvider, domainAuthUseCase, displayNameUsecase,domainReputationUseCase,replyToMismatch,linkMismatch, urlRisk, attachementRisk);
 export default (app: Router) => {
   app.use("", route);
 

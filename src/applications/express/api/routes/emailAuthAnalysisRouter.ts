@@ -10,6 +10,7 @@ import { AnalyzeReplyToMismatchUseCase } from "@usecases/AnalyzeReplyToMismatchU
 import { AnalyzeLinkMismatchUseCase } from "@usecases/AnalyzeLinkMismatchUsecase";
 import { AnalyzeUrlRiskUseCase } from "@usecases/AnalyzerUrlRiskUsecase";
 import { AnalyzeAttachmentRiskUseCase } from "@usecases/AnalizeAttachementRiskUsecase";
+import { SpellCheckAnalyzer } from "@usecases/AnalyzeLanguageQuality";
 
 const route = Router();
 const whoisAdapter = new WhoisJsonAdapter(); 
@@ -21,7 +22,8 @@ const replyToMismatch = new AnalyzeReplyToMismatchUseCase();
 const linkMismatch = new AnalyzeLinkMismatchUseCase()
 const urlRisk = new AnalyzeUrlRiskUseCase()
 const attachementRisk = new AnalyzeAttachmentRiskUseCase()
-const analyzeEmailUseCase = new AnalyzeEmailUseCase(messageProvider, domainAuthUseCase, displayNameUsecase,domainReputationUseCase,replyToMismatch,linkMismatch, urlRisk, attachementRisk);
+const spellcheck = new SpellCheckAnalyzer()
+const analyzeEmailUseCase = new AnalyzeEmailUseCase(messageProvider, domainAuthUseCase, displayNameUsecase,domainReputationUseCase,replyToMismatch,linkMismatch, urlRisk, attachementRisk, spellcheck)
 export default (app: Router) => {
   app.use("", route);
 

@@ -10,6 +10,7 @@
     "emitDecoratorMetadata": true,
     "outDir": "./build",
     "rootDir": "./src",
+    "typeRoots": ["./types", "./node_modules/@types"],    
     "paths": {
       "@config/*": ["./src/config/*"],
       "@envConfig": ["./src/config/env/env"],
@@ -25,6 +26,6 @@
       "@resources/*": ["./src/resources/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*","types"],
   "exclude": ["node_modules", "dist"]
 }

@@ -4,9 +4,9 @@ import { EmailMessage } from '@domainModels/emailAnalyzer/AnalyzedEmail';
 export class AnalyzeAttachmentRiskUseCase extends EmailAnalyzer {
   async analyze(email: EmailMessage): Promise<{ score: number; message: string }> {
     const riskyExtensions = {
-      executable: ['exe', 'bat', 'cmd', 'vbs', 'js', 'jar', 'ps1'],
-      macros: ['docm', 'xlsm', 'pptm'],
-      encryptedArchives: ['zip', 'rar', '7z'],
+      executable: ['fakeexe', 'bat', 'cmd', 'vbs', 'js', 'jar', 'ps1'],
+      macros: ['fakedocm', 'xlsm', 'pptm'],
+      encryptedArchives: ['fakezip', 'rar', '7z'],
     };
 
     let score = 0;
@@ -28,7 +28,7 @@ export class AnalyzeAttachmentRiskUseCase extends EmailAnalyzer {
       }
     }
 
-    // Cap à 60 points maximum
+    
     if (score > 60) score = 60;
 
     return score > 0

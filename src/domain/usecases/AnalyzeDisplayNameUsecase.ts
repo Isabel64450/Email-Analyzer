@@ -9,29 +9,29 @@ export class AnalyzeDisplayNameImpersonationUseCase extends EmailAnalyzer {
     'HR',
     'Support',
     'IT Service',
-    // ajoute d’autres noms / titres internes ici
+    
   ]; 
 
   private readonly trustedDomains = [
     'monentreprise.com',
     'service.interne.com',
-    // ajoute les domaines internes légitimes
+    
   ];
 
  async analyze(email: EmailMessage): Promise<{ score: number; message: string }> {
   
   const headers = email.headers;
 
-    // Trouve l'entête 'From' qui contient normalement le displayName et l'adresse mail
+    
     const fromHeader = headers.find(h => h.name.toLowerCase() === 'from');
     if (!fromHeader) {
       return { score: 0, message: 'Pas d\'entête From trouvée' };
     }
 
-    // Exemple de format : "John CEO" <john.ceo@autredomaine.com>
+    
     const fromValue = fromHeader.value;
 
-    // Extraire displayName et email via regex simple
+    
     const match = fromValue.match(/^(.*)<(.*)>$/);
     if (!match) {
       return { score: 0, message: 'Format entête From inattendu' };
@@ -39,18 +39,18 @@ export class AnalyzeDisplayNameImpersonationUseCase extends EmailAnalyzer {
     const displayName = match[1].trim().toLowerCase();
     const emailAddress = match[2].trim().toLowerCase();
 
-    // Extraire domaine
+    
     const domain = emailAddress.split('@')[1] || '';
 
-    // Vérifier si displayName contient un nom interne "sensible"
+    
     const impersonating = this.trustedNames.some(name =>
       displayName.includes(name.toLowerCase())
     );
 
     const isInternalDomain = this.trustedDomains.includes(domain);
-  const isExternalDomain = !isInternalDomain;
+    const isExternalDomain = !isInternalDomain;
 
-  // Cas 1 : Usurpation d’un nom sensible depuis un domaine externe → +25
+  
   if (impersonating && isExternalDomain) {
     return {
       score: 25,
@@ -58,7 +58,7 @@ export class AnalyzeDisplayNameImpersonationUseCase extends EmailAnalyzer {
     };
   }
 
-  // Cas 2 : Domaine interne utilisé = réduction du score → -15
+  
   if (isInternalDomain) {
     return {
       score: -15,

@@ -24,20 +24,20 @@ export class AnalyzeUrlRiskUseCase extends EmailAnalyzer {
     while ((match = linkRegex.exec(htmlContent)) !== null) {
       const url = match[1];
 
-      // 1. Vérifie si l’URL est raccourcie
+      
       const domain = this.extractDomain(url);
       if (this.shorteners.includes(domain)) {
         score += 10;
         reasons.push(`Le message contient un lien raccourci (${domain}) masquant la destination.`);
       }
 
-      // 2. Vérifie les liens non-HTTPS vers pages sensibles
+      
       if (url.startsWith('http://') && this.loginKeywords.some(k => url.toLowerCase().includes(k))) {
         score += 15;
         reasons.push(`Lien non sécurisé (HTTP) vers une page d'identification : ${url}`);
       }
 
-      // 3. Vérifie les homograph attacks
+     
       if (this.containsIDNHomograph(domain)) {
         score += 15;
         reasons.push(`Lien avec domaine suspect (attaque homographique IDN) : ${domain}`);
@@ -66,7 +66,7 @@ export class AnalyzeUrlRiskUseCase extends EmailAnalyzer {
       const punycode = ascii.startsWith('xn--'); // IDN en punycode
       const unicode = ascii !== ascii.normalize('NFKC'); // form différent
 
-      // Autre technique basique : comparer caractères similaires
+      
       const visuallySimilar = /[а-яё]/i.test(domain); // Lettres cyrilliques par ex
 
       return punycode || unicode || visuallySimilar;

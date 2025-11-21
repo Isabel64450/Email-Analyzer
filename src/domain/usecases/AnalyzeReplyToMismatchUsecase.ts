@@ -33,7 +33,7 @@ export class AnalyzeReplyToMismatchUseCase extends EmailAnalyzer {
   }
 
   private extractEmail(input: string): string {
-    // Exemples possibles : "Support Client" <support@gmail.com> OU juste support@gmail.com
+
     const match = input.match(/<(.+?)>/);
     if (match) return match[1];
     return input.trim();

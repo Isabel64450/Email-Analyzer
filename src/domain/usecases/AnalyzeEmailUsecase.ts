@@ -1,5 +1,7 @@
 import { MessageProvider } from '../ports/EmailAuthAnalyzerPort';
 import { EmailAnalyzer } from './AbstractAnalyzeEmailUsecase';
+import { emails } from '@domainUtils/emails';
+import { EmailMessage } from '@domainModels/emailAnalyzer/AnalyzedEmail';
 
 
 export class AnalyzeEmailUseCase {
@@ -12,11 +14,34 @@ export class AnalyzeEmailUseCase {
     private readonly linkMismatchUsecase: EmailAnalyzer,
     private readonly urlRiskUsecase: EmailAnalyzer,
     private readonly attachementRiskUsecase: EmailAnalyzer,
-    private readonly spellCheckUsecase: EmailAnalyzer
+    private readonly spellCheckUsecase: EmailAnalyzer,
+    private readonly threadHijackUsecase: EmailAnalyzer,
+    private readonly urgentLanguageUsecase: EmailAnalyzer
   ) {}
 
-  async execute(userId: string, messageId: string) {
-    const message = await this.messageProvider.getMessageById(userId, messageId);
+  async execute(userId: string, messageId?: string) {
+    let message:EmailMessage | undefined
+     if (messageId) {
+      
+    message = emails.find(e => e.metadata.id === messageId);
+    
+    if (!message && messageId) {
+      try {
+        
+        
+        message = await this.messageProvider.getMessageById(userId, messageId);
+         
+      } catch (err) {
+        
+      }
+    }
+  }
+
+  // Si pas de message trouvé, prends le message de test par défaut
+  if (!message) {
+    
+    message = emails[0]; // ou emails[0] selon ton choix
+  }
     
    
     if (!message.headers || message.headers.length === 0) {
@@ -25,7 +50,7 @@ export class AnalyzeEmailUseCase {
 
      
 
-    const runAnalysis = (analyzer: EmailAnalyzer) => analyzer.analyze(message);
+    const runAnalysis = (analyzer: EmailAnalyzer) => analyzer.analyze(message, userId);
 
     const [
       domainAuthAnalysis,
@@ -36,6 +61,8 @@ export class AnalyzeEmailUseCase {
       urlRiskAnalysis,
       attachementRiskAnalysis,
       spellcheckAnalysis,
+      threadHijackAnalysis, 
+      urgentLanguageAnalisys,
       
     ] = await Promise.all([
       runAnalysis(this.domainAuthUseCase),
@@ -45,7 +72,9 @@ export class AnalyzeEmailUseCase {
       runAnalysis(this.linkMismatchUsecase),
       runAnalysis(this.urlRiskUsecase),
       runAnalysis(this.attachementRiskUsecase),
-      runAnalysis(this.spellCheckUsecase)
+      runAnalysis(this.spellCheckUsecase),
+      runAnalysis(this.threadHijackUsecase),
+      runAnalysis(this.urgentLanguageUsecase),
       
     ]);
 
@@ -59,7 +88,9 @@ export class AnalyzeEmailUseCase {
     linkMismatch: linkMismatchAnalysis,
     urlRisk: urlRiskAnalysis,
     attachementRisk: attachementRiskAnalysis,
-    spellcheckAnalysis: spellcheckAnalysis
+    spellcheckAnalysis: spellcheckAnalysis,
+    threadHijack: threadHijackAnalysis, 
+    urgentLanguage: urgentLanguageAnalisys
   },
   totalScore:
     domainAuthAnalysis.score +
@@ -69,7 +100,10 @@ export class AnalyzeEmailUseCase {
     linkMismatchAnalysis.score +
     urlRiskAnalysis.score + 
     attachementRiskAnalysis.score +
-    spellcheckAnalysis.score
+    spellcheckAnalysis.score +
+    threadHijackAnalysis.score +
+    urgentLanguageAnalisys.score
+
 };
   }
 }

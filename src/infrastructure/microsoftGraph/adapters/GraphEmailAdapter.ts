@@ -8,6 +8,30 @@ import { EmailAttachment } from '@domainModels/emailAnalyzer/EmailAttachement';
 import { getAccessToken } from '../../../infrastructure/microsoftGraph/authentication/authGraphToken';
 
 export class GraphApiMessageProvider implements MessageProvider {
+
+   async getUserIdByEmail(userEmail: string): Promise<string> {
+  const accessToken = await getAccessToken();
+
+  const url = `https://graph.microsoft.com/v1.0/users?$filter=mail eq '${userEmail}'`;
+
+  const response = await axios.get(url, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    }
+  });
+  
+
+  if (!response.data.value || response.data.value.length === 0) {
+    throw new Error(`Utilisateur introuvable : ${userEmail}`);
+  }
+  const userId = response.data.value[0].id
+  
+  return userId
+   }
+
+
+
+
   async getMessageById(userId: string, messageId: string): Promise<EmailMessage> {
     const accessToken = await getAccessToken();
 

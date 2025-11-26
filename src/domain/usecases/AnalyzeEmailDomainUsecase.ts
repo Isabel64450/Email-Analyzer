@@ -3,6 +3,8 @@ import { EmailAnalyzer } from './AbstractAnalyzeEmailUsecase';
 import { EmailMessage } from '@domainModels/emailAnalyzer/AnalyzedEmail';
 
 export class AnalyzeEmailDomainAuthUseCase extends EmailAnalyzer {
+  private knownDomains = ["afec.fr",  "francetravail.gouv.fr",
+  "pole-emploi.fr"];
   async analyze(email: EmailMessage): Promise<{ score: number; message: string }> {
  
   const headers = email.headers;
@@ -20,6 +22,13 @@ export class AnalyzeEmailDomainAuthUseCase extends EmailAnalyzer {
     const dkimSignature = headerMap['dkim-signature'] || '';
     const arc = headerMap['arc-authentication-results'] || '';
 
+    const fromHeader = headerMap['from'] || '';
+
+    const emailMatch = fromHeader.match(/<(.+?)>/);
+    const fromAddress = emailMatch ? emailMatch[1] : fromHeader;
+
+    const fromDomain = fromAddress.split("@")[1]?.toLowerCase() || '';
+
     // SPF
     if (/softfail|fail/i.test(receivedSpf)) {
       score += 25;
@@ -27,9 +36,10 @@ export class AnalyzeEmailDomainAuthUseCase extends EmailAnalyzer {
     }
 
     // DKIM
+    const isKnownDomain = this.knownDomains.includes(fromDomain);
     const dkimFail = /dkim=fail|none/i.test(authResults);
     const dkimMissing = !dkimSignature;
-    if (dkimFail || dkimMissing) {
+    if (!isKnownDomain && (dkimFail || dkimMissing)) {
       score += 20;
       reasons.push('DKIM absent ou invalide');
     }

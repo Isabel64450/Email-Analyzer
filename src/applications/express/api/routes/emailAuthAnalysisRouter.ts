@@ -39,19 +39,19 @@ export default (app: Router) => {
     })
   );
 
-  route.post('/messages/:userId/:messageId', async (req: Request, res: Response) => {
-  /* const { userId, messageId } = req.params; */
-  const userId = req.headers['x-user-id'] as string;
+  route.post('/messages/:userEmail/:messageId', async (req: Request, res: Response) => {
+
+  const userEmail = req.headers['x-user-id'] as string;
   const messageId = req.headers['x-message-id'] as string;
  
   
 
-  if (!userId || !messageId) {
+  if (!userEmail || !messageId) {
     return res.status(400).json({ error: 'Paramètres requis manquants.' });
   }
 
   try {
-    const message = await analyzeEmailUseCase.execute(userId, messageId);
+    const message = await analyzeEmailUseCase.execute(userEmail, messageId);
     
     res.json(message);
   } catch (error: any) {

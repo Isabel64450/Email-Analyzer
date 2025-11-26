@@ -19,7 +19,8 @@ export class AnalyzeEmailUseCase {
     private readonly urgentLanguageUsecase: EmailAnalyzer
   ) {}
 
-  async execute(userId: string, messageId?: string) {
+  async execute(userEmail: string, messageId?: string) {
+    let userId: string | undefined
     let message:EmailMessage | undefined
      if (messageId) {
       
@@ -28,10 +29,12 @@ export class AnalyzeEmailUseCase {
     if (!message && messageId) {
       try {
         
+        userId = await this.messageProvider.getUserIdByEmail(userEmail)
         
         message = await this.messageProvider.getMessageById(userId, messageId);
          
       } catch (err) {
+        console.error("Erreur en récupérant l'userId ou le message:",err)
         
       }
     }
@@ -102,8 +105,16 @@ export class AnalyzeEmailUseCase {
     attachementRiskAnalysis.score +
     spellcheckAnalysis.score +
     threadHijackAnalysis.score +
-    urgentLanguageAnalisys.score
+    urgentLanguageAnalisys.score,
+    message
 
 };
   }
+
+
+
+
+
+
+
 }

@@ -4,24 +4,25 @@ import { LanguageDetector } from '@infra/spellcheck/LanguageDetector';
 import dictionaryEn from 'dictionary-en';
 import dictionaryFr from 'dictionary-fr';
 import nspell from 'nspell';
+import { decode } from "html-entities";
 type Spellchecker = ReturnType<typeof nspell>;
 
 
 
 export class SpellCheckAnalyzer extends EmailAnalyzer {
-  private readonly fauteSeuil = 5;
+ 
 
   async analyze(email: EmailMessage): Promise<{ score: number; message: string }> {
 
     
-    const text = email.body.content;
-
+    
+    const rawText = email.body.content;
+    const text = decode(rawText);
     const langRaw = LanguageDetector.detectLanguageCode(text);
     const lang = langRaw === 'fr' ? 'fr' : 'en';
 
     const fauteCount = await this.countFautesReelles(text, lang);
-    /* console.log("🧩 Langue détectée :", lang);
-    console.log("🔍 Nombre de fautes détectées :", fauteCount); */
+    
       // Nettoyage pour compter les mots
   const words = text
     .replace(/https?:\/\/\S+/gi, '')         // supprime URLs
@@ -37,8 +38,8 @@ export class SpellCheckAnalyzer extends EmailAnalyzer {
   const ratio = totalWords > 0 ? fauteCount / totalWords : 0;
 
   // Seuil dynamique
-  let seuilRatio = 0.15; // 15% de fautes tolérées
-  let minFaute = 3;      // au moins 3 fautes pour déclencher
+  let seuilRatio = 0.20; // 15% de fautes tolérées
+  let minFaute = 5;      // au moins 3 fautes pour déclencher
 
   if (email.body.contentType.toLowerCase().includes('html')) {
     seuilRatio += 0.05;  // tolère un peu plus pour HTML (bruit)
@@ -52,17 +53,6 @@ export class SpellCheckAnalyzer extends EmailAnalyzer {
     message = `Le message contient un taux inhabituel de fautes (${fauteCount}/${totalWords}, soit ${(ratio * 100).toFixed(1)}%).`;
   }
 
-  // --- LOGS pour visualiser les erreurs ---
-  /* console.log('=== Language Quality Analysis ===');
-  console.log(`Langue détectée: ${lang}`);
-  console.log(`Nombre de mots: ${totalWords}`);
-  console.log(`Nombre de fautes détectées: ${fauteCount}`);
-  console.log(`Ratio fautes/mots: ${(ratio * 100).toFixed(1)}%`);
-  console.log(`Seuil ratio: ${(seuilRatio * 100).toFixed(1)}%`);
-  console.log(`Score attribué: ${score}`);
-  console.log('Message: ', message);
-  console.log('================================'); */
-
   return { score, message };
 }
 
@@ -71,28 +61,27 @@ export class SpellCheckAnalyzer extends EmailAnalyzer {
   private async countFautesReelles(text: string, lang: 'en' | 'fr'): Promise<number> {
     const spellChecker = await this.loadSpellChecker(lang);
    
-       const ignoreList = ["support", "team", "login", "update", "security", "email", "html", "href","span","strong"];
-      const words = text
-      // Supprime les URLs (ex: https://, http://)
-      .replace(/https?:\/\/\S+/gi, '')
-      // Supprime les domaines (ex: www.google.com)
-      .replace(/\bwww\.[^\s]+\b/gi, '')
-      // Supprime les emails (ex: contact@exemple.com)
-      .replace(/\b\S+@\S+\.\S+\b/g, '')
-      // Supprime tout ce qui n’est pas une lettre, espace, tiret ou apostrophe
-      .replace(/[^a-zA-ZÀ-ÿ\s'-]/g, ' ')
-      // Convertit en minuscules
-      .toLowerCase()
-      // Découpe en mots
-      .split(/\s+/)
-      // Filtre les chaînes vides
-      .filter(word => word.length > 2 && !/^[A-Z]+$/.test(word));
-      /* console.log("Texte nettoyé :", text);
-      console.log("Mots analysés :", words);
- */
-    const mistakes = words.filter(word => !spellChecker.correct(word) && !ignoreList.includes(word));
-     /* console.log("Mots fautifs :", mistakes);
-     console.log("Nombre de fautes détectées :", mistakes.length); */
+       const ignoreList = ["support", "team", "login", "update", "security", "email", "html", "href","span","strong","rejoignez", "réunion", "numéro", "code", "secret", "options","le","la","les","des","une","un","est","vous","nous",
+    "réunion","maintenant","besoin","organisateurs","merci"];
+       const cleanedText = decode(text)
+    .replace(/https?:\/\/\S+/gi, '')
+    .replace(/\bwww\.[^\s]+\b/gi, '')
+    .replace(/\b\S+@\S+\.\S+\b/g, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/[^a-zA-ZÀ-ÿ0-9'\s-]/g, ' ')
+    .toLowerCase()
+    .split(/\s+/);
+
+  const words = cleanedText
+      .flatMap(w => w.includes("'") ? w.split("'") : [w])  
+    .filter(w => w.length > 2)
+    .filter(w => !/^\d/.test(w))                         
+    .filter(w => !w.includes('-'))                       
+    .filter(w => !ignoreList.includes(w));       
+
+  const mistakes = words.filter(word => !spellChecker.correct(word));
+    
     return mistakes.length;
   }
 

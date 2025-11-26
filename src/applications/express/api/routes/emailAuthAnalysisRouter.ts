@@ -1,10 +1,11 @@
 import { Router, Request, Response } from "express";
 import { asyncHandler } from "@applications/express/utils/asyncHandler";
-import { AnalyzeEmailDomainAuthUseCase } from "@usecases/AnalyzeEmailDomainUsecase";
-import {AnalyzeEmailUseCase} from "../../../../domain/usecases/AnalyzeEmailUsecase"
+
 import { GraphApiMessageProvider } from "@infra/microsoftGraph/adapters/GraphEmailAdapter";
+import { WhoisJsonAdapter } from "@infra/microsoftGraph/adapters/WhoisJsonAdapter";
+
+import { AnalyzeEmailDomainAuthUseCase } from "@usecases/AnalyzeEmailDomainUsecase";
 import { AnalyzeDisplayNameImpersonationUseCase } from "@usecases/AnalyzeDisplayNameUsecase";
-import { WhoisJsonAdapter} from "@infra/microsoftGraph/adapters/WhoisJsonAdapter";
 import { AnalyzeDomainReputationUseCase } from "@usecases/AnalyzeDomainReputationUsecase";
 import { AnalyzeReplyToMismatchUseCase } from "@usecases/AnalyzeReplyToMismatchUsecase";
 import { AnalyzeLinkMismatchUseCase } from "@usecases/AnalyzeLinkMismatchUsecase";
@@ -13,21 +14,53 @@ import { AnalyzeAttachmentRiskUseCase } from "@usecases/AnalizeAttachementRiskUs
 import { SpellCheckAnalyzer } from "@usecases/AnalyzeLanguageQuality";
 import { ThreadHijackAnalyzer } from "@usecases/AnalizeThreadHijack";
 import { UrgentLanguageAnalyzer } from "@usecases/AnalizeUrgentLanguage";
+
+import { AnalyzeEmailUseCase } from "@usecases/AnalyzeEmailUsecase";
+import { SaveSuspiciousEmailUseCase } from "@usecases/SaveSuspiciousEmailUseCase";
+
+import { instanciatorMariaDb } from "@infra/dataBase/InstanciatorMariaDb";
+
 const route = Router();
-const whoisAdapter = new WhoisJsonAdapter(); 
+
+// ——— Instanciations des dépendances ———
 const messageProvider = new GraphApiMessageProvider();
+const whoisAdapter = new WhoisJsonAdapter();
+
 const domainAuthUseCase = new AnalyzeEmailDomainAuthUseCase();
-const displayNameUsecase = new AnalyzeDisplayNameImpersonationUseCase()
+const displayNameUsecase = new AnalyzeDisplayNameImpersonationUseCase();
 const domainReputationUseCase = new AnalyzeDomainReputationUseCase(whoisAdapter);
 const replyToMismatch = new AnalyzeReplyToMismatchUseCase();
-const linkMismatch = new AnalyzeLinkMismatchUseCase()
-const urlRisk = new AnalyzeUrlRiskUseCase()
-const attachementRisk = new AnalyzeAttachmentRiskUseCase()
-const spellcheck = new SpellCheckAnalyzer()
-const threadHijack =new ThreadHijackAnalyzer(messageProvider)
-const urgentLanguage = new UrgentLanguageAnalyzer()
-const analyzeEmailUseCase = new AnalyzeEmailUseCase(messageProvider, domainAuthUseCase, displayNameUsecase,domainReputationUseCase,replyToMismatch,linkMismatch, urlRisk, attachementRisk, spellcheck, threadHijack, urgentLanguage)
- 
+const linkMismatch = new AnalyzeLinkMismatchUseCase();
+const urlRisk = new AnalyzeUrlRiskUseCase();
+const attachementRisk = new AnalyzeAttachmentRiskUseCase();
+const spellcheck = new SpellCheckAnalyzer();
+const threadHijack = new ThreadHijackAnalyzer(messageProvider);
+const urgentLanguage = new UrgentLanguageAnalyzer();
+
+
+const analyzeEmailUseCase = new AnalyzeEmailUseCase(
+  messageProvider,
+  domainAuthUseCase,
+  displayNameUsecase,
+  domainReputationUseCase,
+  replyToMismatch,
+  linkMismatch,
+  urlRisk,
+  attachementRisk,
+  spellcheck,
+  threadHijack,
+  urgentLanguage
+);
+
+
+const suspiciousEmailRepository = instanciatorMariaDb;
+
+
+const saveSuspiciousEmailUseCase = new SaveSuspiciousEmailUseCase(
+  analyzeEmailUseCase,
+  suspiciousEmailRepository
+);
+
 
 export default (app: Router) => {
   app.use("", route);
@@ -39,26 +72,21 @@ export default (app: Router) => {
     })
   );
 
-  route.post('/messages/:userEmail/:messageId', async (req: Request, res: Response) => {
+  route.post("/messages/:userEmail/:messageId", async (req: Request, res: Response) => {
+    const userEmail = req.headers["x-user-id"] as string;
+    const messageId = req.headers["x-message-id"] as string;
+     
 
-  const userEmail = req.headers['x-user-id'] as string;
-  const messageId = req.headers['x-message-id'] as string;
- 
-  
+    if (!userEmail || !messageId) {
+      return res.status(400).json({ error: "Paramètres requis manquants." });
+    }
 
-  if (!userEmail || !messageId) {
-    return res.status(400).json({ error: 'Paramètres requis manquants.' });
-  }
-
-  try {
-    const message = await analyzeEmailUseCase.execute(userEmail, messageId);
-    
-    res.json(message);
-  } catch (error: any) {
-    console.error('❌ Erreur lors de la récupération du message:', error.message);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-  
+    try {
+      const result = await saveSuspiciousEmailUseCase.execute(userEmail, messageId);
+      res.json(result);
+    } catch (error: any) {
+      console.error("❌ Erreur lors de la récupération du message:", error.message);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  });
 };

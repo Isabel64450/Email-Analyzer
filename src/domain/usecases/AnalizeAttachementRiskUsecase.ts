@@ -4,9 +4,9 @@ import { EmailMessage } from '@domainModels/emailAnalyzer/AnalyzedEmail';
 export class AnalyzeAttachmentRiskUseCase extends EmailAnalyzer {
   async analyze(email: EmailMessage): Promise<{ score: number; message: string }> {
     const riskyExtensions = {
-      executable: ['fakeexe', 'bat', 'cmd', 'vbs', 'js', 'jar', 'ps1'],
-      macros: ['fakedocm', 'xlsm', 'pptm'],
-      encryptedArchives: ['fakezip', 'rar', '7z'],
+      executable: ['exe', 'bat', 'cmd', 'vbs', 'js', 'jar', 'ps1'],
+      macros: ['docm', 'xlsm', 'pptm'],
+      encryptedArchives: ['zip', 'rar', '7z'],
     };
 
     let score = 0;

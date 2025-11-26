@@ -28,4 +28,29 @@ export class MariaDbSuspiciousEmailRepository implements SuspiciousEmailReposito
       throw err;
     }
   }
+
+async exists(messageId: string): Promise<boolean> {
+    try {
+      const result = await this.pool.query(
+        `SELECT COUNT(1) AS count FROM suspicious_emails WHERE message_id = ?`,
+        [messageId]
+      );
+      // mariadb retourne un array de RowDataPacket
+      return result[0].count > 0;
+    } catch (err) {
+      console.error("Erreur SQL lors de exists:", err);
+      throw err;
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
 }

@@ -11,11 +11,10 @@ export const db = mariadb.createPool({
 });
 async function testConnection() {
   try {
-    const conn = await db.getConnection();
-    console.log("✅ Connexion MariaDB réussie !");
-    const res = await conn.query("SELECT 1 AS test");
-    console.log("🔎 Résultat de test :", res);
-    conn.release(); // toujours libérer la connexion
+    const conn = await db.getConnection(); 
+    
+    
+    conn.release();
   } catch (err) {
     console.error("❌ Erreur de connexion :", err);
   }

@@ -10,18 +10,21 @@ export class SaveSuspiciousEmailUseCase {
   ) {}
 
   async execute(userEmail: string, messageId?: string) {
-    // 1️⃣ Analyse l'email
+
     const analysisResult = await this.analyzeEmailUseCase.execute(userEmail, messageId);
 
-    // 2️⃣ Vérifie si le score total dépasse 90
-    if (analysisResult.totalScore > 30) {
+    if (analysisResult.totalScore > 50) {
       const message: EmailMessage = analysisResult.message ?? undefined;
 
       if (!message) {
         throw new Error("Impossible de créer un SuspiciousEmail sans message.");
       }
-
-      // 3️⃣ Crée l'objet SuspiciousEmail
+      const exists = await this.suspiciousEmailRepo.exists(message.metadata.id);
+    if (exists) {
+      
+      return null; 
+    }
+     
       const suspiciousEmail: SuspiciousEmail = {
        messageId: message.metadata.id,
        sender: message.metadata.from,
@@ -33,14 +36,14 @@ export class SaveSuspiciousEmailUseCase {
        rawHeaders: JSON.stringify(message.headers), 
        bodyPreview: message.body.content.slice(0,200)
       };
-      // 4️⃣ Sauvegarde dans la base via le repository
+     
       await this.suspiciousEmailRepo.save(suspiciousEmail);
 
-      console.log("📌 Suspicious email saved, score:", analysisResult.totalScore);
+      
       return suspiciousEmail;
     } else {
-      console.log("✅ Email score below threshold:", analysisResult.totalScore);
-      return null;
+      
+      return analysisResult;
     }
   }
 }
